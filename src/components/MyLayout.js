@@ -7,6 +7,7 @@ import {
   Alert,
   StyleSheet,
   Button,
+  Image,
 } from "react-native";
 
 export default function MyLayout({ children }) {
@@ -14,7 +15,9 @@ export default function MyLayout({ children }) {
       <View style={{ flex: 1 }}>
         {/* Cabeçalho */}
         <View style={styles.header_red} />
-        <View style={styles.header_grey} />
+        <View style={styles.header_grey} >
+          <Image source={require("../images/senai-logo.png")} style={styles.senai_logo}/>
+        </View>
         <View style={styles.header_minired} />
   
         {/* Conteúdo centralizado */}
@@ -53,5 +56,10 @@ export default function MyLayout({ children }) {
       width: "100%",
       height: 30,
     },
+    senai_logo:{
+      width: 109,
+      height: 28,
+      justifyContent:"center",
+    }
   });
   

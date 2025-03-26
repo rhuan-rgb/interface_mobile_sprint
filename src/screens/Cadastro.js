@@ -18,7 +18,6 @@ export default function Cadastro() {
     email: "",
     cpf: "",
     password: "",
-    data_nascimento: "",
   });
 
   async function handleCadastro() {
@@ -59,13 +58,6 @@ export default function Cadastro() {
           placeholder="CPF"
           value={user.cpf}
           onChangeText={(value) => setUser({ ...user, cpf: value })}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Data de nascimento"
-          value={user.data_nascimento}
-          onChangeText={(value) => setUser({ ...user, data_nascimento: value })}
         />
 
         <TextInput

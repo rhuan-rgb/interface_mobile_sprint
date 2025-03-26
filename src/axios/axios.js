@@ -11,7 +11,7 @@ const sheets = {
     postLogin:(user)=>api.post("user/login", user),
     postCadastro:(user)=>api.post("user", user),
 
-    // postIngresso:(user)=>api.post("ingresso", user)
+    
 }
 
 export default sheets;

@@ -9,13 +9,15 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native"; // Importa o hook
 import api from "../axios/axios";
+import {Ionicons} from "@expo/vector-icons"
 
 export default function Login() {
   const navigation = useNavigation(); // Usa o hook para acessar a navegação
 
   const [user, setUser] = useState({
-    email: "",
+    cpf: 0,
     password: "",
+    showPassword: false,
   });
 
   async function handleLogin() {
@@ -37,17 +39,29 @@ export default function Login() {
       <View style={styles.formContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={user.email}
-          onChangeText={(value) => setUser({ ...user, email: value })}
+          placeholder="CPF"
+          value={user.cpf}
+          onChangeText={(value) => setUser({ ...user, cpf: value })}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          secureTextEntry
-          value={user.password}
-          onChangeText={(value) => setUser({ ...user, password: value })}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Senha"
+            secureTextEntry={user.showPassword}
+            value={user.password}
+            onChangeText={(value) => setUser({ ...user, password: value })}
+          />
+          <TouchableOpacity onPress={() => setUser({...user, showPassword: !user.showPassword })}>
+            <Ionicons name={user.showPassword? "eye-off" : "eye"} size={34} color="gray"/>
+          </TouchableOpacity>
+        </View>
+        
+
+
+
+
+
+
         <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
@@ -103,5 +117,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    width: "100%",
+    paddingRight: 10,
   },
 });
