@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Image
 } from "react-native";
 import { useNavigation } from "@react-navigation/native"; // Importa o hook
 import api from "../axios/axios";
@@ -17,7 +18,7 @@ export default function Login() {
   const [user, setUser] = useState({
     cpf: 0,
     password: "",
-    showPassword: false,
+    showPassword: true,
   });
 
   async function handleLogin() {
@@ -36,14 +37,18 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
+      <Image source={require("../images/senai-logo.png")} style={styles.image}/>
       <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="CPF"
-          value={user.cpf}
-          onChangeText={(value) => setUser({ ...user, cpf: value })}
-        />
-        <View style={styles.passwordContainer}>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="CPF"
+            value={user.cpf}
+            onChangeText={(value) => setUser({ ...user, cpf: value })}
+          />
+        </View>
+        
+        <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Senha"
@@ -88,25 +93,26 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 400,
     alignItems: "center",
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    // borderRadius: 10,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
+    // elevation: 3,
   },
   input: {
-    borderColor: "gray",
+    // borderColor: "gray",
+    // backgroundColor:"green",
     width: "100%",
     height: 40,
-    borderBottomWidth: 1,
-    marginBottom: 20,
+    // borderBottomWidth: 1,
+    margin: 4,
     paddingHorizontal: 10,
   },
   button: {
-    backgroundColor: "green",
+    backgroundColor: "#E31313",
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
@@ -118,11 +124,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  passwordContainer: {
+  inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
     width: "100%",
-    paddingRight: 10,
+    paddingRight:50,
+    backgroundColor: "#D9D9D9",
+    marginTop: 8,
+    borderRadius: 5
   },
+  image: {
+    width: 207,
+    height: 53,
+  }
 });

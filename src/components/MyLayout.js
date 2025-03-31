@@ -40,6 +40,8 @@ export default function MyLayout({ children }) {
       backgroundColor: "#D9D9D9",
       width: "100%",
       height: 80,
+      paddingLeft: 20,
+      justifyContent:'center',
     },
     header_red: {
       backgroundColor: "#D52D2D",
