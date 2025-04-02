@@ -46,7 +46,7 @@ export default function MyLayout({ children }) {
     header_red: {
       backgroundColor: "#D52D2D",
       width: "100%",
-      height: 30,
+      height: 70,
     },
     header_minired: {
       backgroundColor: "#D52D2D",
