@@ -23,7 +23,7 @@ export default function App() {
         <Stack.Screen
           name="HomeScreen"
           component={() => (
-            <Layout>
+            <Layout showLeftArrowIcon={false}>
               <HomeScreen />
             </Layout>
           )}
