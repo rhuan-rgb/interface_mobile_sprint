@@ -19,7 +19,7 @@ export function AccountCircleIcon(){
     const navigation = useNavigation();
     return(
         <View style={{marginRight:20}}>
-            <TouchableOpacity onPress={()=>(navigation.navigate(""))}>
+            <TouchableOpacity onPress={()=>(navigation.navigate("Perfil"))}>
                 <MaterialIcons name="account-circle" size={50} color="black"/>
             </TouchableOpacity>
         </View>
