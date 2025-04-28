@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View, StyleSheet, Touchable, TouchableOpacity } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useNavigation } from "@react-navigation/native"; // Importa o hook
@@ -37,7 +37,7 @@ export default function HomeScreen() {
           }}
         >
           <FontAwesome6 name="user" size={80} color="black" style={{margin: 10}} />
-          <Text style={{ fontSize: 20, }}>Salas</Text>
+          <Text style={{ fontSize: 20, }}>Reservas</Text>
         </View>
       </TouchableOpacity>
     </View>
