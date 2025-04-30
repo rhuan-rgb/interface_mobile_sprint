@@ -8,12 +8,13 @@ import {
   StyleSheet,
   Image
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Importa o hook
+import { useNavigation } from "@react-navigation/native"; 
 import api from "../axios/axios";
 import {Ionicons} from "@expo/vector-icons"
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 export default function Login() {
-  const navigation = useNavigation(); // Usa o hook para acessar a navegação
+  const navigation = useNavigation(); 
 
   const [user, setUser] = useState({
     cpf: 0,
@@ -23,10 +24,13 @@ export default function Login() {
 
   async function handleLogin() {
     await api.postLogin(user).then(
-      (response) => {
+      
+      async (response) => {
         console.log(response.data.message);
         Alert.alert(response.data.message);
+        await AsyncStorage.setItem("@cpf", user.cpf);
         navigation.navigate("HomeScreen"); // Navega para a tela HomeScreen
+
       },
       (error) => {
         console.log(error);

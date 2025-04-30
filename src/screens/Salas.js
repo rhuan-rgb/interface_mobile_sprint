@@ -8,15 +8,75 @@ import {
   Modal,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
+import { TextInput } from "react-native-gesture-handler";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
+
 
 export default function Salas() {
   const [salas, setSalas] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [salaSelecionada, setSalaSelecionada] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [scheduleSelecionada, setScheduleSelecionada] = useState({
+    dateStart: "",
+    dateEnd: "",
+    days: "",
+    timeStart: "",
+    timeEnd: "",
+  });
+
+  const [cpf, setCpf] = useState("")
+
+  async function criarReserva() {
+    try {
+      console.log(salaSelecionada.number)
+      console.log(cpf)
+
+      if (!cpf) {
+        Alert.alert("O CPF não foi recuperado corretamente.");
+        return;
+      }
+      
+      const response = await api.postSchedule({
+        dateStart: scheduleSelecionada.dateStart,
+        dateEnd: scheduleSelecionada.dateEnd,
+        days: scheduleSelecionada.days.split(","),
+        timeStart: scheduleSelecionada.timeStart,
+        timeEnd: scheduleSelecionada.timeEnd,
+        fk_id_sala: salaSelecionada.number,
+        cpfUsuario: cpf,
+      });
+      Alert.alert(response.data.message);
+
+      setScheduleSelecionada({
+        dateStart: "",
+        dateEnd: "",
+        days: "",
+        timeStart: "",
+        timeEnd: "",
+      });
+      setModalVisible(false);
+    } catch (error) {
+      console.log("Erro ao criar agendamento", error.response.data.error);
+      Alert.alert(error.response.data.error);
+    }
+  }
+
+  async function abrirModalSala(sala) {
+    setSalaSelecionada(sala);
+    setModalVisible(true);
+  }
 
   useEffect(() => {
+
+    async function getCpf() {
+      const storedCpf = await AsyncStorage.getItem("@cpf")
+      setCpf(storedCpf)
+    }
+
+    getCpf();
     getSalas();
   }, []);
 
@@ -31,21 +91,6 @@ export default function Salas() {
     }
   }
 
-  async function abrirModalReserva(sala) {
-    setSalaSelecionada(sala);
-    setModalVisible(true);
-    await api.postSchedule(sala).then(
-        (response) => {
-          console.log(response.data.message);
-          Alert.alert(response.data.message);
-        },
-        (error) => {
-          console.log(error);
-          Alert.alert("Erro", error.response.data.error);
-        }
-      );
-  }
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}> Salas</Text>
@@ -58,7 +103,7 @@ export default function Salas() {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.salaCard}
-              onPress={() => abrirModalReserva(item)}
+              onPress={() => abrirModalSala(item)}
             >
               <View style={styles.salaName}>
                 <Text style={{ fontWeight: "bold" }}>{item.number}</Text>
@@ -76,8 +121,84 @@ export default function Salas() {
         animationType="slide"
       >
         <View style={styles.modalContainer}>
-          <Text>{salaSelecionada.description}</Text>
-           
+          <Text style={{left:50}}>Preencha os campos da sua reserva</Text>
+          <View style={styles.risco}></View>
+          <Text style={{fontSize:20, marginTop:"10%"}}>
+            {salaSelecionada.number} - {salaSelecionada.description}
+          </Text>
+
+          <Text style={{marginTop: "30"}}>Data de início</Text>
+          <TextInput
+            value={scheduleSelecionada.dateStart}
+            onChangeText={(text) =>
+              setScheduleSelecionada({
+                ...scheduleSelecionada,
+                dateStart: text,
+              })
+            }
+            style={styles.input}
+            placeholder="dd-mm-yyyy"
+          />
+
+          <Text>Data de término</Text>
+          <TextInput
+            value={scheduleSelecionada.dateEnd}
+            onChangeText={(text) =>
+              setScheduleSelecionada({
+                ...scheduleSelecionada,
+                dateEnd: text,
+              })
+            }
+            style={styles.input}
+            placeholder="dd-mm-yyyy"
+          />
+
+          <Text>Dias</Text>
+          <TextInput
+            value={scheduleSelecionada.days}
+            onChangeText={(text) =>
+              setScheduleSelecionada({
+                ...scheduleSelecionada,
+                days: text,
+              })
+            }
+            style={styles.input}
+            placeholder="Ex: Seg, Ter, Qua"
+          />
+
+          <Text>Horário de início</Text>
+          <TextInput
+            value={scheduleSelecionada.timeStart}
+            onChangeText={(text) =>
+              setScheduleSelecionada({
+                ...scheduleSelecionada,
+                timeStart: text,
+              })
+            }
+            style={styles.input}
+            placeholder="Ex: 01:00"
+          />
+
+          <Text>Horário de término</Text>
+          <TextInput
+            value={scheduleSelecionada.timeEnd}
+            onChangeText={(text) =>
+              setScheduleSelecionada({
+                ...scheduleSelecionada,
+                timeEnd: text,
+              })
+            }
+            style={styles.input}
+            placeholder="Ex: 02:00"
+          />
+
+          <TouchableOpacity
+            style={[styles.closeButton,]}
+            onPress={criarReserva}
+          >
+            <Text style={{ color: "white" }} >Reservar</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setModalVisible(false)}
@@ -129,10 +250,31 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   closeButton: {
-    marginTop: 20,
-    backgroundColor: "blue",
-    padding: 10,
+    marginTop: 10,  // Reduzindo a margem superior
+    backgroundColor: "#D52D2D",
+    paddingVertical: 6,  // Menos padding vertical para tornar o botão mais fino
+    paddingHorizontal: 12,  // Menos padding horizontal para um botão mais estreito
     alignItems: "center",
     borderRadius: 6,
+    color: "white",
+    width: 120,  // Definindo uma largura fixa (opcional)
+    height: 40,  // Definindo uma altura fixa (opcional)
+    justifyContent: "center", // Para centralizar o texto verticalmente
+    fontSize: 14, // Menor tamanho de fonte
+    left:"30%"
+  }
+  ,
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    padding: 10,
+    marginBottom: 10,
+  },
+  risco: {
+    backgroundColor: "#D52D2D",
+    width: "95%",
+    height: 1,
+    margin: 10
   },
 });
