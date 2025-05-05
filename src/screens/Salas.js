@@ -11,8 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Salas() {
   const [salas, setSalas] = useState([]);
@@ -27,27 +26,28 @@ export default function Salas() {
     timeEnd: "",
   });
 
-  const [cpf, setCpf] = useState("")
+  const [cpf, setCpf] = useState("");
 
   async function criarReserva() {
+    if (!cpf) {
+      Alert.alert("Erro", "O CPF do usuário não foi carregado.");
+      return;
+    }
     try {
-      console.log(salaSelecionada.number)
-      console.log(cpf)
+      console.log(salaSelecionada.number);
+      console.log("In Criar Reserva: ",cpf);
 
-      if (!cpf) {
-        Alert.alert("O CPF não foi recuperado corretamente.");
-        return;
-      }
-      
-      const response = await api.postSchedule({
+      const sala = {
         dateStart: scheduleSelecionada.dateStart,
         dateEnd: scheduleSelecionada.dateEnd,
         days: scheduleSelecionada.days.split(","),
         timeStart: scheduleSelecionada.timeStart,
         timeEnd: scheduleSelecionada.timeEnd,
-        fk_id_sala: salaSelecionada.number,
-        cpfUsuario: cpf,
-      });
+        classroom: salaSelecionada.number,
+        user: cpf,
+      };
+
+      const response = await api.postSchedule(sala);
       Alert.alert(response.data.message);
 
       setScheduleSelecionada({
@@ -59,7 +59,7 @@ export default function Salas() {
       });
       setModalVisible(false);
     } catch (error) {
-      console.log("Erro ao criar agendamento", error.response.data.error);
+      console.log("Erro ao criar agendamento", error);
       Alert.alert(error.response.data.error);
     }
   }
@@ -69,13 +69,19 @@ export default function Salas() {
     setModalVisible(true);
   }
 
-  useEffect(() => {
+  const getCpf = async () => {
+    try {
+      const cpf = await AsyncStorage.getItem("cpf");
 
-    async function getCpf() {
-      const storedCpf = await AsyncStorage.getItem("@cpf")
-      setCpf(storedCpf)
+      if (cpf) {
+        setCpf(cpf);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar cpf:", error);
     }
+  };
 
+  useEffect(() => {
     getCpf();
     getSalas();
   }, []);
@@ -121,13 +127,13 @@ export default function Salas() {
         animationType="slide"
       >
         <View style={styles.modalContainer}>
-          <Text style={{left:50}}>Preencha os campos da sua reserva</Text>
+          <Text style={{ left: 50 }}>Preencha os campos da sua reserva</Text>
           <View style={styles.risco}></View>
-          <Text style={{fontSize:20, marginTop:"10%"}}>
+          <Text style={{ fontSize: 20, marginTop: "10%" }}>
             {salaSelecionada.number} - {salaSelecionada.description}
           </Text>
 
-          <Text style={{marginTop: "30"}}>Data de início</Text>
+          <Text style={{ marginTop: "30" }}>Data de início</Text>
           <TextInput
             value={scheduleSelecionada.dateStart}
             onChangeText={(text) =>
@@ -192,11 +198,8 @@ export default function Salas() {
             placeholder="Ex: 02:00"
           />
 
-          <TouchableOpacity
-            style={[styles.closeButton,]}
-            onPress={criarReserva}
-          >
-            <Text style={{ color: "white" }} >Reservar</Text>
+          <TouchableOpacity style={[styles.closeButton]} onPress={criarReserva}>
+            <Text style={{ color: "white" }}>Reservar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -250,20 +253,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   closeButton: {
-    marginTop: 10,  // Reduzindo a margem superior
+    marginTop: 10, // Reduzindo a margem superior
     backgroundColor: "#D52D2D",
-    paddingVertical: 6,  // Menos padding vertical para tornar o botão mais fino
-    paddingHorizontal: 12,  // Menos padding horizontal para um botão mais estreito
+    paddingVertical: 6, // Menos padding vertical para tornar o botão mais fino
+    paddingHorizontal: 12, // Menos padding horizontal para um botão mais estreito
     alignItems: "center",
     borderRadius: 6,
     color: "white",
-    width: 120,  // Definindo uma largura fixa (opcional)
-    height: 40,  // Definindo uma altura fixa (opcional)
+    width: 120, // Definindo uma largura fixa (opcional)
+    height: 40, // Definindo uma altura fixa (opcional)
     justifyContent: "center", // Para centralizar o texto verticalmente
     fontSize: 14, // Menor tamanho de fonte
-    left:"30%"
-  }
-  ,
+    left: "30%",
+  },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -275,6 +277,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#D52D2D",
     width: "95%",
     height: 1,
-    margin: 10
+    margin: 10,
   },
 });

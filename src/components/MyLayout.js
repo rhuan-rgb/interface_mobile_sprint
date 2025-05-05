@@ -39,10 +39,10 @@ export default function MyLayout({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Faz com que essa view ocupe o maior espaço possível
-    justifyContent: "center", // Centraliza verticalmente
-    alignItems: "center", // Centraliza horizontalmente
-    paddingHorizontal: 20, // Adiciona espaçamento lateral
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    paddingHorizontal: 20, 
   },
   header_grey: {
     backgroundColor: "#D9D9D9",

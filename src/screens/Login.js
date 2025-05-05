@@ -6,15 +6,15 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Image
+  Image,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; 
+import { useNavigation } from "@react-navigation/native";
 import api from "../axios/axios";
-import {Ionicons} from "@expo/vector-icons"
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
 
   const [user, setUser] = useState({
     cpf: 0,
@@ -22,15 +22,26 @@ export default function Login() {
     showPassword: true,
   });
 
+  async function guardarCpf(cpfUser) {
+    try {
+      
+      await AsyncStorage.setItem("cpf", cpfUser);
+    } catch (erro) {
+      console.error("Erro ao armazenar dados:", erro);
+    }
+  }
+
   async function handleLogin() {
     await api.postLogin(user).then(
-      
       async (response) => {
         console.log(response.data.message);
         Alert.alert(response.data.message);
-        await AsyncStorage.setItem("@cpf", user.cpf);
         navigation.navigate("HomeScreen"); // Navega para a tela HomeScreen
 
+        const cpfUser = response.data.user.cpf;
+
+        guardarCpf(cpfUser);
+        console.log("-----cpf------: ", await AsyncStorage.getItem("cpf"))
       },
       (error) => {
         console.log(error);
@@ -41,7 +52,10 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Image source={require("../images/senai-logo.png")} style={styles.image}/>
+      <Image
+        source={require("../images/senai-logo.png")}
+        style={styles.image}
+      />
       <View style={styles.formContainer}>
         <View style={styles.inputContainer}>
           <TextInput
@@ -51,7 +65,7 @@ export default function Login() {
             onChangeText={(value) => setUser({ ...user, cpf: value })}
           />
         </View>
-        
+
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -60,16 +74,18 @@ export default function Login() {
             value={user.password}
             onChangeText={(value) => setUser({ ...user, password: value })}
           />
-          <TouchableOpacity onPress={() => setUser({...user, showPassword: !user.showPassword })}>
-            <Ionicons name={user.showPassword? "eye-off" : "eye"} size={34} color="gray"/>
+          <TouchableOpacity
+            onPress={() =>
+              setUser({ ...user, showPassword: !user.showPassword })
+            }
+          >
+            <Ionicons
+              name={user.showPassword ? "eye-off" : "eye"}
+              size={34}
+              color="gray"
+            />
           </TouchableOpacity>
         </View>
-        
-
-
-
-
-
 
         <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Entrar</Text>
@@ -122,13 +138,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    paddingRight:50,
+    paddingRight: 50,
     backgroundColor: "#D9D9D9",
     marginTop: 8,
-    borderRadius: 5
+    borderRadius: 5,
   },
   image: {
     width: 207,
     height: 53,
-  }
+  },
 });
