@@ -22,9 +22,9 @@ export default function Login() {
     showPassword: true,
   });
 
-  async function guardarCpf(cpfUser) {
+  async function guardarCpfToken(cpfUser, token) {
     try {
-      
+      await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("cpf", cpfUser);
     } catch (erro) {
       console.error("Erro ao armazenar dados:", erro);
@@ -38,10 +38,14 @@ export default function Login() {
         Alert.alert(response.data.message);
         navigation.navigate("HomeScreen"); // Navega para a tela HomeScreen
 
+        const token = response.data.token
         const cpfUser = response.data.user.cpf;
 
-        guardarCpf(cpfUser);
+        guardarCpfToken(cpfUser, token);
+
         console.log("-----cpf------: ", await AsyncStorage.getItem("cpf"))
+        console.log("-----token------: ", await AsyncStorage.getItem("token"))
+
       },
       (error) => {
         console.log(error);

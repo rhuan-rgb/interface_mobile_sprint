@@ -10,7 +10,11 @@ const api = axios.create({
 const sheets = {
     postLogin:(user)=>api.post("user/login", user),
     postCadastro:(user)=>api.post("user", user),
-    getAllClassrooms:()=>api.get("classroom"),
+    getAllClassrooms:(token)=>api.get("classroom", {
+        headers: {
+            authorization: token,
+        },
+    }),
     postSchedule:(sala)=>api.post("schedule", sala)
 
     

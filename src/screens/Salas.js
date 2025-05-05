@@ -27,6 +27,8 @@ export default function Salas() {
   });
 
   const [cpf, setCpf] = useState("");
+  const [token, setToken] = useState("");
+
 
   async function criarReserva() {
     if (!cpf) {
@@ -81,19 +83,32 @@ export default function Salas() {
     }
   };
 
+  const getToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if(token){
+        setToken(token)
+      }
+    } catch (error) {
+      console.error("Erro ao buscar token:", error);
+    }
+  };
+
+
   useEffect(() => {
+    getToken();
     getCpf();
     getSalas();
   }, []);
 
   async function getSalas() {
     try {
-      const response = await api.getAllClassrooms();
+      const response = await api.getAllClassrooms(token);
       console.log(response.data);
       setSalas(response.data.classrooms);
       setLoading(false);
     } catch (error) {
-      console.log(error.response.data.error);
+      console.log("nao chegou o token: ",error.response.data.error);
     }
   }
 
