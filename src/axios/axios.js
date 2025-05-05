@@ -8,15 +8,16 @@ const api = axios.create({
 });
 
 const sheets = {
+    
     postLogin:(user)=>api.post("user/login", user),
     postCadastro:(user)=>api.post("user", user),
-    getAllClassrooms:(token)=>api.get("classroom", {
-        headers: {
-            authorization: token,
-        },
-    }),
-    postSchedule:(sala)=>api.post("schedule", sala)
+    getAllClassrooms:()=>api.get("classroom"),
+    postSchedule:(sala)=>api.post("schedule", sala),
 
+    getSchedulesByIdClassroomRanges: (class_id, dataInicio, dataTermino ) =>
+        api.get(
+          `/schedule/ranges/${class_id}?weekStart=${dataInicio}&weekEnd=${dataTermino}`
+        ),
     
 }
 

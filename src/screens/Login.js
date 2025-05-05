@@ -36,8 +36,7 @@ export default function Login() {
       async (response) => {
         console.log(response.data.message);
         Alert.alert(response.data.message);
-        navigation.navigate("HomeScreen"); // Navega para a tela HomeScreen
-
+        
         const token = response.data.token
         const cpfUser = response.data.user.cpf;
 
@@ -45,6 +44,7 @@ export default function Login() {
 
         console.log("-----cpf------: ", await AsyncStorage.getItem("cpf"))
         console.log("-----token------: ", await AsyncStorage.getItem("token"))
+        navigation.navigate("HomeScreen"); // Navega para a tela HomeScreen
 
       },
       (error) => {

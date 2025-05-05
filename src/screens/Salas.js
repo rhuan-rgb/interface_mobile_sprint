@@ -12,8 +12,11 @@ import {
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native"; // Importa o hook
+import EvilIcons from '@expo/vector-icons/EvilIcons';
 
 export default function Salas() {
+  const navigation = useNavigation();
   const [salas, setSalas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [salaSelecionada, setSalaSelecionada] = useState("");
@@ -29,6 +32,73 @@ export default function Salas() {
   const [cpf, setCpf] = useState("");
   const [token, setToken] = useState("");
 
+  const [selectedRoom, setSelectedRoom] = useState("");
+  const [dataReservaInicio, setdataReservaInicio] = useState("");
+  const [dataReservaTermino, setdataReservaTermino] = useState("");
+
+  const data_nao_valida = (dataInicio, dataTermino) => {
+    const d1Epoch = getEpochLocal(dataInicio);
+    const d2Epoch = getEpochLocal(dataTermino);
+    const nowEpoch = new Date().setHours(0, 0, 0, 0);
+
+    if (d2Epoch < d1Epoch || d1Epoch < nowEpoch || d2Epoch < nowEpoch) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const getEpochLocal = (dateStr) => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day).setHours(0, 0, 0, 0);
+  };
+
+  const handleDisponibilidade = async () => {
+    if (!dataReservaInicio || !dataReservaTermino) {
+      alert("Informe o período dos agendamentos.");
+      return;
+    }
+
+    try {
+      if (data_nao_valida(dataReservaInicio, dataReservaTermino)) {
+        alert("Data do agendamento inválida");
+        return;
+      }
+
+      const salas = await api.getSchedulesByIdClassroomRanges(
+        selectedRoom,
+        dataReservaInicio,
+        dataReservaTermino
+      );
+
+      const salasFiltradas = limparHorariosComAgendamentos(
+        salas.data.schedulesByDayAndTimeRange
+      );
+
+      alert(JSON.stringify(salasFiltradas));
+    } catch (error) {
+      console.error("Erro ao buscar horários:", error);
+      alert("Erro ao buscar horários.");
+    }
+  };
+
+  const limparHorariosComAgendamentos = (schedulesByDayAndTimeRange) => {
+    const diasDaSemana = Object.keys(schedulesByDayAndTimeRange);
+
+    return diasDaSemana.reduce((acc, dia) => {
+      const horariosFiltrados = Object.entries(schedulesByDayAndTimeRange[dia])
+        .filter(([intervalo, reservas]) => reservas.length === 0)
+        .reduce((obj, [intervalo]) => {
+          obj[intervalo] = [];
+          return obj;
+        }, {});
+
+      if (Object.keys(horariosFiltrados).length > 0) {
+        acc[dia] = horariosFiltrados;
+      }
+      return acc;
+    }, {});
+  };
 
   async function criarReserva() {
     if (!cpf) {
@@ -37,7 +107,7 @@ export default function Salas() {
     }
     try {
       console.log(salaSelecionada.number);
-      console.log("In Criar Reserva: ",cpf);
+      console.log("In Criar Reserva: ", cpf);
 
       const sala = {
         dateStart: scheduleSelecionada.dateStart,
@@ -86,14 +156,13 @@ export default function Salas() {
   const getToken = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      if(token){
-        setToken(token)
+      if (token) {
+        setToken(token);
       }
     } catch (error) {
       console.error("Erro ao buscar token:", error);
     }
   };
-
 
   useEffect(() => {
     getToken();
@@ -103,12 +172,12 @@ export default function Salas() {
 
   async function getSalas() {
     try {
-      const response = await api.getAllClassrooms(token);
+      const response = await api.getAllClassrooms();
       console.log(response.data);
       setSalas(response.data.classrooms);
       setLoading(false);
     } catch (error) {
-      console.log("nao chegou o token: ",error.response.data.error);
+      console.log("Erro: ", error.response.data.error);
     }
   }
 
@@ -142,7 +211,7 @@ export default function Salas() {
         animationType="slide"
       >
         <View style={styles.modalContainer}>
-          <Text style={{ left: 50 }}>Preencha os campos da sua reserva</Text>
+          <Text style={{ left: "25%" }}>Preencha os campos da sua reserva</Text>
           <View style={styles.risco}></View>
           <Text style={{ fontSize: 20, marginTop: "10%" }}>
             {salaSelecionada.number} - {salaSelecionada.description}
@@ -158,7 +227,7 @@ export default function Salas() {
               })
             }
             style={styles.input}
-            placeholder="dd-mm-yyyy"
+            placeholder="yyyy-mm-dd"
           />
 
           <Text>Data de término</Text>
@@ -171,7 +240,7 @@ export default function Salas() {
               })
             }
             style={styles.input}
-            placeholder="dd-mm-yyyy"
+            placeholder="yyyy-mm-dd"
           />
 
           <Text>Dias</Text>
@@ -197,7 +266,7 @@ export default function Salas() {
               })
             }
             style={styles.input}
-            placeholder="Ex: 01:00"
+            placeholder="Ex: 10:00"
           />
 
           <Text>Horário de término</Text>
@@ -210,21 +279,65 @@ export default function Salas() {
               })
             }
             style={styles.input}
-            placeholder="Ex: 02:00"
+            placeholder="Ex: 11:00"
           />
 
-          <TouchableOpacity style={[styles.closeButton]} onPress={criarReserva}>
+          <TouchableOpacity style={styles.closeButton} onPress={criarReserva}>
             <Text style={{ color: "white" }}>Reservar</Text>
           </TouchableOpacity>
 
+          <Text style={{ marginTop: 10 }}>
+            Deseja consultar a disponibildade?
+          </Text>
+
+          <Text style={{ marginTop: 10 }}>Sala Selecionada</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Número da sala"
+            value={selectedRoom}
+            onChangeText={setSelectedRoom}
+          />
+          <Text>Data de Início</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="dd-mm-yyyy"
+            value={dataReservaInicio}
+            onChangeText={setdataReservaInicio}
+          />
+          <Text>Data de Término</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="dd-mm-yyyy"
+            value={dataReservaTermino}
+            onChangeText={setdataReservaTermino}
+          />
+
           <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setModalVisible(false)}
+            style={styles.botao}
+            onPress={() =>
+              handleDisponibilidade(
+                selectedRoom,
+                dataReservaInicio,
+                dataReservaTermino
+              )
+            }
           >
-            <Text style={{ color: "white" }}>Fechar</Text>
           </TouchableOpacity>
+
+          <EvilIcons name="close" size={24} color="black" onPress={() => setModalVisible(false)} />
+          
+
         </View>
       </Modal>
+
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => {
+          navigation.navigate("HorariosDisponiveis");
+        }}
+      >
+        <Text style={{ color: "white" }}>Horarios Disponiveis</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -270,16 +383,15 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 10, // Reduzindo a margem superior
     backgroundColor: "#D52D2D",
-    paddingVertical: 6, // Menos padding vertical para tornar o botão mais fino
-    paddingHorizontal: 12, // Menos padding horizontal para um botão mais estreito
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     alignItems: "center",
     borderRadius: 6,
     color: "white",
-    width: 120, // Definindo uma largura fixa (opcional)
-    height: 40, // Definindo uma altura fixa (opcional)
-    justifyContent: "center", // Para centralizar o texto verticalmente
-    fontSize: 14, // Menor tamanho de fonte
-    left: "30%",
+    width: 120,
+    height: 40,
+    fontSize: 18, // Menor tamanho de fonte
+    left: "37%",
   },
   input: {
     borderWidth: 1,

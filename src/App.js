@@ -7,8 +7,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import Layout from "./components/MyLayout";
 import Perfil from "./screens/Perfil";
 import Salas from "./screens/Salas";
-import Reservas from "./screens/Reservas"
-
+import Reservas from "./screens/Reservas";
+import HorariosDisponiveis from "./screens/HorariosDisponiveis"
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -21,7 +21,7 @@ export default function App() {
         <Stack.Screen
           name="Login"
           component={() => (
-            <Layout>
+            <Layout showLeftArrowIcon={false} showAccountCircleIcon={false}>
               <Login />
             </Layout>
           )}
@@ -37,7 +37,7 @@ export default function App() {
         <Stack.Screen
           name="Cadastro"
           component={() => (
-            <Layout>
+            <Layout showLeftArrowIcon={false} showAccountCircleIcon={false}>
               <Cadastro />
             </Layout>
           )}
@@ -58,6 +58,7 @@ export default function App() {
             </Layout>
           )}
         />
+
         <Stack.Screen
           name="Salas"
           component={() => (
@@ -66,6 +67,17 @@ export default function App() {
             </Layout>
           )}
         />
+
+        <Stack.Screen
+          name="HorariosDisponiveis"
+          component={() => (
+            <Layout>
+              <HorariosDisponiveis />
+            </Layout>
+          )}
+        />
+
+
       </Stack.Navigator>
     </NavigationContainer>
   );
