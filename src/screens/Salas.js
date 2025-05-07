@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
+import { ScrollView, TextInput } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native"; // Importa o hook
 import EvilIcons from '@expo/vector-icons/EvilIcons';
@@ -28,13 +28,13 @@ export default function Salas() {
     timeStart: "",
     timeEnd: "",
   });
+  const [salasDisponiveisList, setSalasDisponiveis] = useState(false);
 
   const [cpf, setCpf] = useState("");
   const [token, setToken] = useState("");
 
   const [selectedRoom, setSelectedRoom] = useState("");
-  const [dataReservaInicio, setdataReservaInicio] = useState("");
-  const [dataReservaTermino, setdataReservaTermino] = useState("");
+
 
   const data_nao_valida = (dataInicio, dataTermino) => {
     const d1Epoch = getEpochLocal(dataInicio);
@@ -54,28 +54,29 @@ export default function Salas() {
   };
 
   const handleDisponibilidade = async () => {
-    if (!dataReservaInicio || !dataReservaTermino) {
-      alert("Informe o período dos agendamentos.");
+    if (!scheduleSelecionada.dateStart || !scheduleSelecionada.dateEnd || !scheduleSelecionada.days) {
+      alert("Informe o período e os dias dos agendamentos.");
       return;
     }
 
     try {
-      if (data_nao_valida(dataReservaInicio, dataReservaTermino)) {
+      if (data_nao_valida(scheduleSelecionada.dateStart, scheduleSelecionada.dateEnd)) {
         alert("Data do agendamento inválida");
         return;
       }
 
       const salas = await api.getSchedulesByIdClassroomRanges(
-        selectedRoom,
-        dataReservaInicio,
-        dataReservaTermino
+        salaSelecionada.number,
+        scheduleSelecionada.dateStart,
+        scheduleSelecionada.dateEnd
       );
 
       const salasFiltradas = limparHorariosComAgendamentos(
         salas.data.schedulesByDayAndTimeRange
       );
 
-      alert(JSON.stringify(salasFiltradas));
+      // alert(JSON.stringify(salasFiltradas));
+      setSalasDisponiveis(salasFiltradas);
     } catch (error) {
       console.error("Erro ao buscar horários:", error);
       alert("Erro ao buscar horários.");
@@ -130,6 +131,7 @@ export default function Salas() {
         timeEnd: "",
       });
       setModalVisible(false);
+      setSalasDisponiveis(false);
     } catch (error) {
       console.log("Erro ao criar agendamento", error);
       Alert.alert(error.response.data.error);
@@ -207,137 +209,152 @@ export default function Salas() {
 
       <Modal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => { setModalVisible(false); setSalaSelecionada(false) }}
         animationType="slide"
       >
-        <View style={styles.modalContainer}>
-          <Text style={{ left: "25%" }}>Preencha os campos da sua reserva</Text>
-          <View style={styles.risco}></View>
-          <Text style={{ fontSize: 20, marginTop: "10%" }}>
-            {salaSelecionada.number} - {salaSelecionada.description}
-          </Text>
+        <ScrollView>
+          <View style={styles.modalContainer}>
+            <Text style={{ alignSelf: "center" }}>Preencha os campos da sua reserva</Text>
+            <View style={styles.risco}></View>
+            <Text style={{ fontSize: 20, marginTop: "10%" }}>
+              {salaSelecionada.number} - {salaSelecionada.description}
+            </Text>
 
-          <Text style={{ marginTop: "30" }}>Data de início</Text>
-          <TextInput
-            value={scheduleSelecionada.dateStart}
-            onChangeText={(text) =>
-              setScheduleSelecionada({
-                ...scheduleSelecionada,
-                dateStart: text,
-              })
-            }
-            style={styles.input}
-            placeholder="yyyy-mm-dd"
-          />
+            <Text style={{ marginTop: "30" }}>Data de início</Text>
+            <TextInput
+              value={scheduleSelecionada.dateStart}
+              onChangeText={(text) =>
+                setScheduleSelecionada({
+                  ...scheduleSelecionada,
+                  dateStart: text,
+                })
+              }
+              style={styles.input}
+              placeholder="yyyy-mm-dd"
+            />
 
-          <Text>Data de término</Text>
-          <TextInput
-            value={scheduleSelecionada.dateEnd}
-            onChangeText={(text) =>
-              setScheduleSelecionada({
-                ...scheduleSelecionada,
-                dateEnd: text,
-              })
-            }
-            style={styles.input}
-            placeholder="yyyy-mm-dd"
-          />
+            <Text>Data de término</Text>
+            <TextInput
+              value={scheduleSelecionada.dateEnd}
+              onChangeText={(text) =>
+                setScheduleSelecionada({
+                  ...scheduleSelecionada,
+                  dateEnd: text,
+                })
+              }
+              style={styles.input}
+              placeholder="yyyy-mm-dd"
+            />
 
-          <Text>Dias</Text>
-          <TextInput
-            value={scheduleSelecionada.days}
-            onChangeText={(text) =>
-              setScheduleSelecionada({
-                ...scheduleSelecionada,
-                days: text,
-              })
-            }
-            style={styles.input}
-            placeholder="Ex: Seg, Ter, Qua"
-          />
+            <Text>Dias</Text>
+            <TextInput
+              value={scheduleSelecionada.days}
+              onChangeText={(text) =>
+                setScheduleSelecionada({
+                  ...scheduleSelecionada,
+                  days: text,
+                })
+              }
+              style={styles.input}
+              placeholder="Ex: Seg, Ter, Qua"
+            />
 
-          <Text>Horário de início</Text>
-          <TextInput
-            value={scheduleSelecionada.timeStart}
-            onChangeText={(text) =>
-              setScheduleSelecionada({
-                ...scheduleSelecionada,
-                timeStart: text,
-              })
-            }
-            style={styles.input}
-            placeholder="Ex: 10:00"
-          />
+            {salasDisponiveisList && (
+              <View style={{ marginTop: 20 }}>
+                {scheduleSelecionada.days
+                  .split(",")
+                  .map((dia) => dia.trim())
+                  .filter((dia) => salasDisponiveisList[dia])
+                  .map((dia) => (
+                    <View key={dia} style={{ marginBottom: 20 }}>
+                      <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 6 }}>
+                        {dia}
+                      </Text>
+                      <View style={{ backgroundColor: "#f0f0f0", borderRadius: 6, padding: 10 }}>
+                        {(() => {
+                          const horariosUnicos = new Set();
+                          Object.values(salasDisponiveisList).forEach((horarios) => {
+                            Object.keys(horarios).forEach((hora) => horariosUnicos.add(hora));
+                          });
+                          const horariosOrdenados = Array.from(horariosUnicos).sort();
 
-          <Text>Horário de término</Text>
-          <TextInput
-            value={scheduleSelecionada.timeEnd}
-            onChangeText={(text) =>
-              setScheduleSelecionada({
-                ...scheduleSelecionada,
-                timeEnd: text,
-              })
-            }
-            style={styles.input}
-            placeholder="Ex: 11:00"
-          />
+                          return horariosOrdenados.map((horario) => (
+                            <View key={`${dia}-${horario}`} style={{ paddingVertical: 4 }}>
+                              <Text>
+                                {salasDisponiveisList[dia][horario] !== undefined
+                                  ? horario
+                                  : "Indisponível"}
+                              </Text>
+                            </View>
+                          ));
+                        })()}
+                      </View>
+                    </View>
+                  ))}
+              </View>
+            )}
 
-          <TouchableOpacity style={styles.closeButton} onPress={criarReserva}>
-            <Text style={{ color: "white" }}>Reservar</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.buttonDisponivel}
+              onPress={() =>
+                handleDisponibilidade(
+                  salaSelecionada.number,
+                  scheduleSelecionada.dateStart,
+                  scheduleSelecionada.dateEnd
+                )
+              }
+            >
+              <Text style={{ color: "white" }}>
+                Conferir disponibilidade das salas
+              </Text>
+            </TouchableOpacity>
 
-          <Text style={{ marginTop: 10 }}>
-            Deseja consultar a disponibildade?
-          </Text>
 
-          <Text style={{ marginTop: 10 }}>Sala Selecionada</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Número da sala"
-            value={selectedRoom}
-            onChangeText={setSelectedRoom}
-          />
-          <Text>Data de Início</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="dd-mm-yyyy"
-            value={dataReservaInicio}
-            onChangeText={setdataReservaInicio}
-          />
-          <Text>Data de Término</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="dd-mm-yyyy"
-            value={dataReservaTermino}
-            onChangeText={setdataReservaTermino}
-          />
 
-          <TouchableOpacity
-            style={styles.botao}
-            onPress={() =>
-              handleDisponibilidade(
-                selectedRoom,
-                dataReservaInicio,
-                dataReservaTermino
-              )
-            }
-          >
-          </TouchableOpacity>
 
-          <EvilIcons name="close" size={24} color="black" onPress={() => setModalVisible(false)} />
-          
+            <Text  style={{marginTop:15}}>Horário de início</Text>
+            <TextInput
+              value={scheduleSelecionada.timeStart}
+              onChangeText={(text) =>
+                setScheduleSelecionada({
+                  ...scheduleSelecionada,
+                  timeStart: text,
+                })
+              }
+              style={styles.input}
+              placeholder="Ex: 10:00"
+            />
 
-        </View>
+            <Text>Horário de término</Text>
+            <TextInput
+              value={scheduleSelecionada.timeEnd}
+              onChangeText={(text) =>
+                setScheduleSelecionada({
+                  ...scheduleSelecionada,
+                  timeEnd: text,
+                })
+              }
+              style={styles.input}
+              placeholder="Ex: 11:00"
+            />
+
+            <TouchableOpacity style={styles.closeButton} onPress={criarReserva}>
+              <Text style={{ color: "white" }}>Reservar</Text>
+            </TouchableOpacity>
+
+            <View style={styles.iconCloseContainer}>
+              <EvilIcons
+                name="close"
+                size={28}
+                color="black"
+                onPress={() => setModalVisible(false)}
+              />
+            </View>
+
+          </View>
+        </ScrollView>
+
       </Modal>
-
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={() => {
-          navigation.navigate("HorariosDisponiveis");
-        }}
-      >
-        <Text style={{ color: "white" }}>Horarios Disponiveis</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -373,6 +390,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
+
   },
   ingressoItem: {
     padding: 10,
@@ -390,8 +408,8 @@ const styles = StyleSheet.create({
     color: "white",
     width: 120,
     height: 40,
-    fontSize: 18, // Menor tamanho de fonte
-    left: "37%",
+    fontSize: 18,
+    alignSelf: "center",
   },
   input: {
     borderWidth: 1,
@@ -406,4 +424,22 @@ const styles = StyleSheet.create({
     height: 1,
     margin: 10,
   },
+  iconCloseContainer: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+  },
+
+  buttonDisponivel: {
+    marginTop: 10,
+    backgroundColor: "#D52D2D",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderRadius: 6,
+    width: 300,
+    alignSelf: "center",
+  },
+
+
 });

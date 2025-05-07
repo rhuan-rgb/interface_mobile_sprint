@@ -8,7 +8,6 @@ import Layout from "./components/MyLayout";
 import Perfil from "./screens/Perfil";
 import Salas from "./screens/Salas";
 import Reservas from "./screens/Reservas";
-import HorariosDisponiveis from "./screens/HorariosDisponiveis"
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -64,15 +63,6 @@ export default function App() {
           component={() => (
             <Layout>
               <Salas />
-            </Layout>
-          )}
-        />
-
-        <Stack.Screen
-          name="HorariosDisponiveis"
-          component={() => (
-            <Layout>
-              <HorariosDisponiveis />
             </Layout>
           )}
         />
