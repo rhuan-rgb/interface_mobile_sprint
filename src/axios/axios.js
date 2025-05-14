@@ -11,6 +11,7 @@ const sheets = {
     
     postLogin:(user)=>api.post("user/login", user),
     postCadastro:(user)=>api.post("user", user),
+    getUserById:(cpf)=>api.get(`user/${cpf}`),
     getAllClassrooms:()=>api.get("classroom"),
     postSchedule:(sala)=>api.post("schedule", sala),
 
