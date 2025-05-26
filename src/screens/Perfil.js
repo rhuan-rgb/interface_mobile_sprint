@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import api from "../axios/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import ModalBase from "../components/ModalBase";
 
 export default function Perfil() {
   const navigation = useNavigation();
