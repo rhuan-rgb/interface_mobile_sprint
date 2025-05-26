@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, StyleSheet, Alert } from "react-native";
+import { Text, View, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import api from "../axios/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Perfil() {
+  const navigation = useNavigation();
+
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -12,17 +15,19 @@ export default function Perfil() {
         const cpf = await AsyncStorage.getItem("cpf");
         if (cpf) {
           await api.getUserById(cpf).then(
-            (response) =>{
+            (response) => {
               let CPF_escondido = response.data.user.cpf.split("");
               for (let i = 0; i < 8; i++) {
                 CPF_escondido[i] = "*";
               }
               response.data.user.cpf = CPF_escondido.join("");
               setUser(response.data.user);
-            }, (error) => {
-              Alert.alert("erro ao buscar o usuário");
+            },
+            (error) => {
+              Alert.alert("Erro ao buscar o usuário");
+              console.log(error);
             }
-          )
+          );
         }
       } catch (error) {
         console.error("Erro ao carregar o perfil:", error);
@@ -31,15 +36,36 @@ export default function Perfil() {
     getCPF();
   }, []);
 
+  function TrocarSenha(){
+
+  }
+
+
+  async function Logout(){
+    await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("cpf");
+    navigation.navigate("Login");
+  }
+
+
   return (
-    <View style={styles.container}>
+    <View style={styles.page}>
       {user ? (
         <>
-          <Text style={styles.header}>Meu perfil</Text>
-          <Text style={styles.info}>Nome: {user.name}</Text>
-          <Text style={styles.info}>Email: {user.email}</Text>
-          <Text style={styles.info}>CPF: {user.cpf}</Text>
-          
+          <View style={styles.container}>
+            <Text style={styles.header}>Meu perfil</Text>
+            <Text style={styles.info}>Nome: {user.name}</Text>
+            <Text style={styles.info}>Email: {user.email}</Text>
+            <Text style={styles.info}>CPF: {user.cpf}</Text>
+          </View>
+          <View style={styles.buttons}>
+            <TouchableOpacity onPress={()=>{TrocarSenha()}} style={styles.eachButton}>
+              <Text style={styles.buttonText}>Trocar senha</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>{Logout()}} style={styles.eachButton}>
+              <Text style={styles.buttonText}>Sair</Text>
+            </TouchableOpacity>
+          </View>
         </>
       ) : (
         <Text>Carregando perfil...</Text>
@@ -49,27 +75,44 @@ export default function Perfil() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  page: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
     padding: 20,
-    width: '100%',
+    justifyContent: "center",   // Centraliza verticalmente
+    alignItems: "center",       // Centraliza horizontalmente
+  },
+  container: {
+    alignItems: "center",       // Centraliza textos e itens na view
+    marginBottom: 80,
   },
   header: {
     fontSize: 48,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 40,
+    textAlign: "center",
   },
   info: {
-    fontSize: 36,
+    fontSize: 24,
     marginVertical: 5,
+    textAlign: "left", // Alinha o texto à esquerda
+    width: 220,        // Define uma largura mínima para que o texto tenha espaço para se alinhar
+  },
+  buttons: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 25,
+  },
+  eachButton: {
+    backgroundColor: "#D90000",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    minWidth: 200,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
-
-
-
-
-
-
-
