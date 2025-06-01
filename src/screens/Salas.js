@@ -312,7 +312,7 @@ export default function Salas() {
 
 
 
-            <Text  style={{marginTop:15}}>Horário de início</Text>
+            <Text style={{ marginTop: 15 }}>Horário de início</Text>
             <TextInput
               value={scheduleSelecionada.timeStart}
               onChangeText={(text) =>
