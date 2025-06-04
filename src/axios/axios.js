@@ -20,6 +20,8 @@ const sheets = {
           `/schedule/ranges/${class_id}?weekStart=${dataInicio}&weekEnd=${dataTermino}`
         ),
     
+    getScheduleByCpf: (cpf)=> api.get(`schedule/cpf/${cpf}`),
+    deleteSchedule: (schedule)=> api.delete(`schedule/${schedule}`)
 }
 
 export default sheets;

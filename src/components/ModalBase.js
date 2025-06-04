@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, View, StyleSheet, Pressable, Text } from "react-native";
 
 const ModalBase = ({ open, onClose, children }) => {
+
   return (
     <Modal
       visible={open}
@@ -13,13 +14,6 @@ const ModalBase = ({ open, onClose, children }) => {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             {children}
-            <Pressable
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? "#ddd" : "#fff",
-              })}
-            >
-              <Text>Toque aqui</Text>
-            </Pressable>
           </View>
         </View>
       </Pressable>
