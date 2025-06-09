@@ -6,19 +6,18 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import api from "../axios/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalBase from "../components/ModalBase";
 
-// estava copiando do salas, pois a estilização é a mesma. Não terminei de copiar...
 export default function Reservas() {
-  const [cpf, setCpf] = useState(null);
-  const [token, setToken] = useState("");
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reservaSelecionada, setReservaSelecionada] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalDeleteVisible, setModalDeleteVisible] = useState(false);
 
   useEffect(() => {
     getUserInformation();
@@ -26,44 +25,58 @@ export default function Reservas() {
 
   const getUserInformation = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
       const cpf = await AsyncStorage.getItem("cpf");
-      if (token && cpf) {
-        setToken(token);
-        setCpf(cpf); // aparentemente não é necessário, mas deixei para caso falte.
-        getReservas(cpf);
-      }
+      getReservas(cpf);
     } catch (error) {
       console.error("Erro ao buscar as informações do usuário:", error);
     }
   };
+
+  async function getReservas(cpf) {
+    try {
+      const response = await api.getScheduleByCpf(cpf);
+      setReservas(response.data.results);
+      setLoading(false);
+    } catch (error) {
+      Alert.alert("Erro ao buscar reservas", error?.response?.data?.error || "");
+    }
+  }
 
   function abrirModalSala(reserva) {
     setReservaSelecionada(reserva);
     setModalVisible(true);
   }
 
-  async function getReservas(cpf) {
+  function DateTreatment(data) {
+    let dateTreated = data.split("T")[0];
+    const [year, month, day] = dateTreated.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  async function DeleteSchedule(scheduleId) {
     try {
-      const response = await api.getScheduleByCpf(cpf);
-      setReservas(response.data.results);
-      
+      const response = await api.deleteSchedule(scheduleId);
+      if (response.status === 201) {
+        Alert.alert("Reserva excluída com sucesso");
+        setModalDeleteVisible(false);
+        setModalVisible(false);
+        getUserInformation(); // Atualiza a lista após deletar
+      }
     } catch (error) {
-      console.log("Erro: ", error.response.data.error);
-    } finally {
-        setLoading(false);
+      Alert.alert("Erro ao excluir reserva");
+      console.log(error);
     }
   }
 
   return (
     <View>
-      <Text>Minhas reservas</Text>
+      <Text style={styles.title}>Minhas reservas</Text>
       {loading ? (
         <ActivityIndicator size="large" color="red" />
       ) : (
         <FlatList
           data={reservas}
-          keyExtractor={(item) => item.id.toString()} // o quê vai ser o id de cada elemento da lista?
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.salaCard}
@@ -83,32 +96,71 @@ export default function Reservas() {
           )}
         />
       )}
+
+      {/* Modal com detalhes da reserva */}
+      {reservaSelecionada && (
+        <ModalBase
+          open={modalVisible}
+          onClose={() => setModalVisible(false)}
+        >
+          <View>
+            <Text style={{ fontWeight: "bold" }}>
+              Sala: {reservaSelecionada.classroom}
+            </Text>
+            <Text>
+              Data de início: {DateTreatment(reservaSelecionada.dateStart)}
+            </Text>
+            <Text>
+              Data de término: {DateTreatment(reservaSelecionada.dateEnd)}
+            </Text>
+            <Text>
+              Horário: {reservaSelecionada.timeStart} -{" "}
+              {reservaSelecionada.timeEnd}
+            </Text>
+            <Text>Dias reservados: {reservaSelecionada.days}</Text>
+
+            <TouchableOpacity
+              onPress={() => setModalDeleteVisible(true)}
+              style={{ width: "100%" }}
+            >
+              <Text
+                style={{
+                  backgroundColor: "#D52D2D",
+                  textAlign: "center",
+                  color: "white",
+                  padding: 10,
+                  marginTop: 10,
+                }}
+              >
+                EXCLUIR RESERVA
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ModalBase>
+      )}
+
+      {/* Modal de confirmação para deletar */}
       <ModalBase
-        open={modalVisible}
-        onClose={() => setModalVisible(!modalVisible)}
+        open={modalDeleteVisible}
+        onClose={() => setModalDeleteVisible(false)}
       >
         <View>
-          <Text style={{ fontWeight: "bold" }}>
-            Sala: {reservaSelecionada.classroom}
-          </Text>
-          <Text>
-            Data de início: {DateTreatment(reservaSelecionada.dateStart)}
-          </Text>
-          <Text>
-            Data de término: {DateTreatment(reservaSelecionada.dateEnd)}
-          </Text>
-          <Text>
-            Horário: {reservaSelecionada.timeStart} -{" "}
-            {reservaSelecionada.timeEnd}
-          </Text>
-          <Text>Dias reservados: {reservaSelecionada.days}</Text>
+          <Text>Deseja realmente excluir a reserva?</Text>
+
           <TouchableOpacity
-            onPress={() => DeleteSchedule(reservaSelecionada)}
-            style={{ width: "100%" }}
+            onPress={async () => {
+              await DeleteSchedule(reservaSelecionada.id);
+            }}
+            style={{ marginTop: 10 }}
           >
-            <Text style={{ backgroundColor: "#D52D2D", alignItems: "center" }}>
-              EXCLUIR RESERVA
-            </Text>
+            <Text style={{ color: "red" }}>SIM</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setModalDeleteVisible(false)}
+            style={{ marginTop: 10 }}
+          >
+            <Text>NÃO</Text>
           </TouchableOpacity>
         </View>
       </ModalBase>
@@ -117,21 +169,16 @@ export default function Reservas() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    paddingTop: 50,
-  },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 8,
-    color: "#807F7F",
+    margin: 10,
   },
   salaCard: {
     padding: 8,
     backgroundColor: "#f1f1f1",
     borderRadius: 8,
+    margin: 8,
   },
   salaName: {
     backgroundColor: "#d9d9d9",
@@ -139,13 +186,3 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 });
-
-function DateTreatment(data) {
-  let dateTreated = data.split("T")[0];
-  const [year, month, day] = dateTreated.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-function DeleteSchedule(schedule) {
-  api.deleteSchedule(schedule);
-}
