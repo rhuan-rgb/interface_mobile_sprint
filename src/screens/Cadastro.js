@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Image
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native"; // Importa o hook
 import api from "../axios/axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 export default function Cadastro() {
   const navigation = useNavigation(); // Usa o hook para acessar a navegação
@@ -26,6 +28,7 @@ export default function Cadastro() {
       (response) => {
         console.log(response.data.message);
         Alert.alert(response.data.message);
+        guardarCpfToken(user);
         navigation.navigate("HomeScreen");
       },
       (error) => {
@@ -35,9 +38,33 @@ export default function Cadastro() {
     );
   }
 
+  async function guardarCpfToken(user) {
+    try {
+      await api.postLogin(user).then(
+        async (response) => {
+          const token = response.data.token;
+          console.log(token);
+          console.log("antes do setItem token")
+          await AsyncStorage.setItem("token", token);
+        },
+        (error) => {
+          console.log(error);
+          console.log("caiu no error");
+          Alert.alert("Erro", error.response.data.error);
+        }
+      );
+      await AsyncStorage.setItem("cpf", user.cpf);
+    } catch (erro) {
+      console.error("Erro ao armazenar dados:", erro);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <Image source={require("../images/senai-logo.png")} style={styles.image} />
+      <Image
+        source={require("../images/senai-logo.png")}
+        style={styles.image}
+      />
       <View style={styles.formContainer}>
         <View style={styles.inputContainer}>
           <TextInput
@@ -49,37 +76,32 @@ export default function Cadastro() {
         </View>
 
         <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={user.email}
-          onChangeText={(value) => setUser({ ...user, email: value })}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={user.email}
+            onChangeText={(value) => setUser({ ...user, email: value })}
+          />
         </View>
 
         <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="CPF"
-          value={user.cpf}
-          onChangeText={(value) => setUser({ ...user, cpf: value })}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="CPF"
+            value={user.cpf}
+            onChangeText={(value) => setUser({ ...user, cpf: value })}
+          />
         </View>
 
         <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          secureTextEntry
-          value={user.password}
-          onChangeText={(value) => setUser({ ...user, password: value })}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Senha"
+            secureTextEntry
+            value={user.password}
+            onChangeText={(value) => setUser({ ...user, password: value })}
+          />
         </View>
-        
-
-        
-
-        
 
         <TouchableOpacity onPress={handleCadastro} style={styles.button}>
           <Text style={styles.buttonText}>Cadastrar</Text>
@@ -136,10 +158,10 @@ const styles = StyleSheet.create({
     paddingRight: 50,
     backgroundColor: "#D9D9D9",
     marginTop: 8,
-    borderRadius: 5
+    borderRadius: 5,
   },
   image: {
     width: 207,
     height: 53,
-  }
+  },
 });

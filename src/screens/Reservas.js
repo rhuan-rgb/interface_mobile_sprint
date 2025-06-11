@@ -14,6 +14,8 @@ import ModalBase from "../components/ModalBase";
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
+  const [totalReservas, setTotalReservas] = useState(0);
+  const [subtrairTotalReservas, setSubtrairTotalReservas] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reservaSelecionada, setReservaSelecionada] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -21,7 +23,12 @@ export default function Reservas() {
 
   useEffect(() => {
     getUserInformation();
+    getReservaCpf();
   }, []);
+
+  useEffect(() => {
+    setTotalReservas(totalReservas--);
+  }, subtrairTotalReservas)
 
   const getUserInformation = async () => {
     try {
@@ -31,6 +38,17 @@ export default function Reservas() {
       console.error("Erro ao buscar as informações do usuário:", error);
     }
   };
+  async function getReservaCpf() {
+    try {
+      const cpf = await AsyncStorage.getItem("cpf");
+      const response = await api.getScheduleByCpf(cpf);
+      setReservas(response.data.results);
+      setTotalReservas(response.data.results[0]?.total_reservas || 0);
+    } catch (error) {
+      console.log("Erro ao buscar reservas", error);
+    }
+  }
+
 
   async function getReservas(cpf) {
     try {
@@ -38,7 +56,10 @@ export default function Reservas() {
       setReservas(response.data.results);
       setLoading(false);
     } catch (error) {
-      Alert.alert("Erro ao buscar reservas", error?.response?.data?.error || "");
+      Alert.alert(
+        "Erro ao buscar reservas",
+        error?.response?.data?.error || ""
+      );
     }
   }
 
@@ -71,6 +92,7 @@ export default function Reservas() {
   return (
     <View>
       <Text style={styles.title}>Minhas reservas</Text>
+      <Text style={styles.total_schedules}>total: {totalReservas}</Text>
       {loading ? (
         <ActivityIndicator size="large" color="red" />
       ) : (
@@ -99,10 +121,7 @@ export default function Reservas() {
 
       {/* Modal com detalhes da reserva */}
       {reservaSelecionada && (
-        <ModalBase
-          open={modalVisible}
-          onClose={() => setModalVisible(false)}
-        >
+        <ModalBase open={modalVisible} onClose={() => setModalVisible(false)}>
           <View>
             <Text style={{ fontWeight: "bold" }}>
               Sala: {reservaSelecionada.classroom}
@@ -150,6 +169,7 @@ export default function Reservas() {
           <TouchableOpacity
             onPress={async () => {
               await DeleteSchedule(reservaSelecionada.id);
+              setSubtrairTotalReservas(!subtrairTotalReservas);
             }}
             style={{ marginTop: 10 }}
           >
@@ -173,6 +193,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     margin: 10,
+    textAlign: "center"
+  },
+  total_schedules: {
+    fontSize: 17.5,
+    fontWeight: "bold",
+    margin: 5,
+    textAlign: "center"
   },
   salaCard: {
     padding: 8,
