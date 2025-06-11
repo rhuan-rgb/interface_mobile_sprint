@@ -15,7 +15,6 @@ import ModalBase from "../components/ModalBase";
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
   const [totalReservas, setTotalReservas] = useState(0);
-  const [subtrairTotalReservas, setSubtrairTotalReservas] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reservaSelecionada, setReservaSelecionada] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,9 +25,7 @@ export default function Reservas() {
     getReservaCpf();
   }, []);
 
-  useEffect(() => {
-    setTotalReservas(totalReservas--);
-  }, subtrairTotalReservas)
+ 
 
   const getUserInformation = async () => {
     try {
@@ -82,6 +79,7 @@ export default function Reservas() {
         setModalDeleteVisible(false);
         setModalVisible(false);
         getUserInformation(); // Atualiza a lista após deletar
+        setTotalReservas(prev => prev - 1);
       }
     } catch (error) {
       Alert.alert("Erro ao excluir reserva");
@@ -169,7 +167,6 @@ export default function Reservas() {
           <TouchableOpacity
             onPress={async () => {
               await DeleteSchedule(reservaSelecionada.id);
-              setSubtrairTotalReservas(!subtrairTotalReservas);
             }}
             style={{ marginTop: 10 }}
           >
