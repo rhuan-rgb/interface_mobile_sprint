@@ -25,8 +25,6 @@ export default function Reservas() {
     getReservaCpf();
   }, []);
 
- 
-
   const getUserInformation = async () => {
     try {
       const cpf = await AsyncStorage.getItem("cpf");
@@ -45,7 +43,6 @@ export default function Reservas() {
       console.log("Erro ao buscar reservas", error);
     }
   }
-
 
   async function getReservas(cpf) {
     try {
@@ -78,8 +75,10 @@ export default function Reservas() {
         Alert.alert("Reserva excluída com sucesso");
         setModalDeleteVisible(false);
         setModalVisible(false);
-        getUserInformation(); // Atualiza a lista após deletar
-        setTotalReservas(prev => prev - 1);
+        setReservas((prev) => {
+          prev.filter((reserva) => reserva.id !== scheduleId);
+        }); // Atualiza a lista após deletar
+        setTotalReservas((prev) => prev - 1);
       }
     } catch (error) {
       Alert.alert("Erro ao excluir reserva");
@@ -190,13 +189,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     margin: 10,
-    textAlign: "center"
+    textAlign: "center",
   },
   total_schedules: {
     fontSize: 17.5,
     fontWeight: "bold",
     margin: 5,
-    textAlign: "center"
+    textAlign: "center",
   },
   salaCard: {
     padding: 8,

@@ -27,7 +27,7 @@ const sheets = {
   //perfil
   getUserById: (cpf) => api.get(`user/${cpf}`),
   updatePassword: (trocarSenha) => api.put(`/user/newpassword`, trocarSenha),
-  deleteUser: (cpf) => api.delete(`/user/${cpf}`, cpf)
+  deleteUser: (cpf) => api.delete(`/user/${cpf}`, cpf),
 
   //salas (reservar as salas)
   getAllClassrooms: () => api.get("classroom"),
