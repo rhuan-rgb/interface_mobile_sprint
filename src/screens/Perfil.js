@@ -224,7 +224,7 @@ export default function Perfil() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.modalButton} onPress={()=>TrocarSenha()}>
+          <TouchableOpacity style={styles.modalButton} onPress={() => TrocarSenha()}>
             <Text style={styles.modalButtonText}>Confirmar</Text>
           </TouchableOpacity>
         </View>
@@ -305,29 +305,23 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-
   input: {
-    width: 250,
-    height: 45,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-  },
+  width: 200,
+  height: 45,
+},
+
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: 250,
-    height: 45,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-    justifyContent: "space-between",
-  },
-  
+  flexDirection: "row",
+  alignItems: "center",
+  width: 250,
+  height: 45,
+  borderColor: "#ccc",
+  borderWidth: 1,
+  borderRadius: 8,
+  paddingHorizontal: 10,
+  marginBottom: 15,
+  backgroundColor: "#fff",
+  justifyContent: "space-between",
+},
+
 });
