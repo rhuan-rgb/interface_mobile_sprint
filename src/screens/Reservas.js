@@ -75,9 +75,7 @@ export default function Reservas() {
         Alert.alert("Reserva excluída com sucesso");
         setModalDeleteVisible(false);
         setModalVisible(false);
-        setReservas((prev) => {
-          prev.filter((reserva) => reserva.id !== scheduleId);
-        }); // Atualiza a lista após deletar
+        setReservas((prev) => prev.filter((reserva) => reserva.id !== scheduleId));
         setTotalReservas((prev) => prev - 1);
       }
     } catch (error) {
@@ -85,6 +83,7 @@ export default function Reservas() {
       console.log(error);
     }
   }
+
 
   return (
     <View>

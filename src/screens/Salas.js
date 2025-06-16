@@ -33,6 +33,8 @@ export default function Salas() {
   // useRef para impedir que o daysArray seja resetado a cada renderização
   const daysArray = useRef([]);
   const [salasDisponiveisList, setSalasDisponiveis] = useState(false);
+  const [horarioSelecionado, setHorarioSelecionado] = useState("");
+
 
   const [isChecked, setChecked] = useState({
     Seg: false,
@@ -46,7 +48,7 @@ export default function Salas() {
   const [cpf, setCpf] = useState("");
   const [token, setToken] = useState("");
 
-  const [selectedRoom, setSelectedRoom] = useState("");
+
 
 
   const data_nao_valida = (dataInicio, dataTermino) => {
@@ -126,12 +128,13 @@ export default function Salas() {
       const sala = {
         dateStart: scheduleSelecionada.dateStart,
         dateEnd: scheduleSelecionada.dateEnd,
-        days: scheduleSelecionada.days.split(","),
+        days: scheduleSelecionada.days.split(",").map((dia) => dia.trim()),
         timeStart: scheduleSelecionada.timeStart,
         timeEnd: scheduleSelecionada.timeEnd,
         classroom: salaSelecionada.number,
         user: cpf,
       };
+      console.log(sala);
 
       const response = await api.postSchedule(sala);
       Alert.alert(response.data.message);
@@ -145,6 +148,16 @@ export default function Salas() {
       });
       setModalVisible(false);
       setSalasDisponiveis(false);
+      setHorarioSelecionado("");
+      setChecked({
+        Seg: false,
+        Ter: false,
+        Qua: false,
+        Qui: false,
+        Sex: false,
+        Sab: false
+      });
+
     } catch (error) {
       console.log("Erro ao criar agendamento", error);
       Alert.alert(error.response.data.error);
@@ -225,7 +238,21 @@ export default function Salas() {
     return `${dia}/${mes}/${ano}`;
   }
 
-  
+
+  function formatarHora(intervalo) {
+    if (!intervalo) return;
+
+    const [ini, fim] = intervalo.split("-").map((s) => s.trim());
+
+    setScheduleSelecionada((prev) => ({
+      ...prev,
+      timeStart: ini,
+      timeEnd: fim,
+    }));
+
+    setHorarioSelecionado(intervalo);
+  }
+
 
 
 
@@ -396,15 +423,29 @@ export default function Salas() {
                           });
                           const horariosOrdenados = Array.from(horariosUnicos).sort();
 
-                          return horariosOrdenados.map((horario) => (
-                            <View key={`${dia}-${horario}`} style={{ paddingVertical: 4 }}>
-                              <Text>
-                                {salasDisponiveisList[dia][horario] !== undefined
-                                  ? horario
-                                  : "Indisponível"}
-                              </Text>
-                            </View>
-                          ));
+                          return horariosOrdenados.map((horario) => {
+                            const ativo = horarioSelecionado === horario;
+
+                            return (
+                              <TouchableOpacity
+                                key={`${dia}-${horario}`}
+                                onPress={() => formatarHora(horario)}
+                                style={[
+                                  styles.horarioBtn,
+                                  ativo ? styles.horarioAtivo : styles.horarioInativo,
+                                ]}
+                                disabled={salasDisponiveisList[dia][horario] === undefined}
+                              >
+                                <Text
+                                  style={ativo ? styles.horarioTextoAtivo : styles.horarioTextoInativo}
+                                >
+                                  {salasDisponiveisList[dia][horario] !== undefined
+                                    ? horario
+                                    : "Indisponível"}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          });
                         })()}
                       </View>
                     </View>
@@ -430,31 +471,6 @@ export default function Salas() {
 
 
 
-            <Text style={{ marginTop: 15 }}>Horário de início</Text>
-            <TextInput
-              value={scheduleSelecionada.timeStart}
-              onChangeText={(text) =>
-                setScheduleSelecionada({
-                  ...scheduleSelecionada,
-                  timeStart: text,
-                })
-              }
-              style={styles.input}
-              placeholder="Ex: 10:00"
-            />
-
-            <Text>Horário de término</Text>
-            <TextInput
-              value={scheduleSelecionada.timeEnd}
-              onChangeText={(text) =>
-                setScheduleSelecionada({
-                  ...scheduleSelecionada,
-                  timeEnd: text,
-                })
-              }
-              style={styles.input}
-              placeholder="Ex: 11:00"
-            />
 
             <TouchableOpacity style={styles.closeButton} onPress={criarReserva}>
               <Text style={{ color: "white" }}>Reservar</Text>
@@ -568,6 +584,24 @@ const styles = StyleSheet.create({
   },
   paragraph: {
     fontSize: 16,
+  },
+  horarioBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  horarioAtivo: {
+    backgroundColor: "#0077bb", // vermelho quando clicado
+  },
+  horarioInativo: {
+    backgroundColor: "#f0f0f0", // cor neutra
+  },
+  horarioTextoAtivo: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  horarioTextoInativo: {
+    color: "#000",
   },
 
 });
