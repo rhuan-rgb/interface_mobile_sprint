@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../axios/axios";
 import {
   View,
@@ -14,6 +14,8 @@ import { ScrollView, TextInput } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native"; // Importa o hook
 import EvilIcons from '@expo/vector-icons/EvilIcons';
+import Checkbox from 'expo-checkbox';
+import DatePicker from "../components/DatePicker";
 
 export default function Salas() {
   const navigation = useNavigation();
@@ -28,7 +30,18 @@ export default function Salas() {
     timeStart: "",
     timeEnd: "",
   });
+  // useRef para impedir que o daysArray seja resetado a cada renderização
+  const daysArray = useRef([]);
   const [salasDisponiveisList, setSalasDisponiveis] = useState(false);
+
+  const [isChecked, setChecked] = useState({
+    Seg: false,
+    Ter: false,
+    Qua: false,
+    Qui: false,
+    Sex: false,
+    Sab: false
+  });
 
   const [cpf, setCpf] = useState("");
   const [token, setToken] = useState("");
@@ -183,6 +196,39 @@ export default function Salas() {
     }
   }
 
+  function daysFunction(number, willBeChecked) {
+    const dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+    const dia = dias[number];
+
+    if (willBeChecked) {
+      if (!daysArray.current.includes(dia)) {
+        daysArray.current.push(dia);
+      }
+    } else {
+      daysArray.current = daysArray.current.filter((day) => day !== dia);
+    }
+
+    // atualiza o texto do campo "Dias"
+    setScheduleSelecionada((prev) => ({
+      ...prev,
+      days: daysArray.current.join(", "),
+    }));
+  }
+
+  function formatarDataParaBR(dataISO) {
+    if (!dataISO || typeof dataISO !== "string") return "";
+
+    const partes = dataISO.split("-");
+    if (partes.length !== 3) return "";
+
+    const [ano, mes, dia] = partes;
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  
+
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}> Salas</Text>
@@ -220,44 +266,116 @@ export default function Salas() {
               {salaSelecionada.number} - {salaSelecionada.description}
             </Text>
 
-            <Text style={{ marginTop: "30" }}>Data de início</Text>
-            <TextInput
-              value={scheduleSelecionada.dateStart}
-              onChangeText={(text) =>
-                setScheduleSelecionada({
-                  ...scheduleSelecionada,
-                  dateStart: text,
-                })
+            <Text>Data de início</Text>
+            <DatePicker
+              type="date"
+              buttonTitle={
+                scheduleSelecionada.dateStart === ""
+                  ? "Selecione a data inicial da reserva"
+                  : formatarDataParaBR(scheduleSelecionada.dateStart)   // já vem em YYYY-MM-DD
               }
-              style={styles.input}
-              placeholder="yyyy-mm-dd"
+              dateKey="dateStart"
+              setValue={setScheduleSelecionada}
             />
 
             <Text>Data de término</Text>
-            <TextInput
-              value={scheduleSelecionada.dateEnd}
-              onChangeText={(text) =>
-                setScheduleSelecionada({
-                  ...scheduleSelecionada,
-                  dateEnd: text,
-                })
+            <DatePicker
+              type="date"
+              buttonTitle={
+                scheduleSelecionada.dateEnd === ""
+                  ? "Selecione a data final da reserva"
+                  : formatarDataParaBR(scheduleSelecionada.dateEnd)   // já vem em YYYY-MM-DD
               }
-              style={styles.input}
-              placeholder="yyyy-mm-dd"
+              dateKey="dateEnd"
+              setValue={setScheduleSelecionada}
             />
 
-            <Text>Dias</Text>
-            <TextInput
-              value={scheduleSelecionada.days}
-              onChangeText={(text) =>
-                setScheduleSelecionada({
-                  ...scheduleSelecionada,
-                  days: text,
-                })
-              }
-              style={styles.input}
-              placeholder="Ex: Seg, Ter, Qua"
-            />
+            <Text style={{ marginBottom: 10 }}>Dias da semana</Text>
+
+            {/* Seg */}
+            <View style={styles.checkbox_section}>
+              <Checkbox
+                style={styles.checkbox}
+                value={isChecked.Seg}
+                onValueChange={() => {
+                  const novoValor = !isChecked.Seg;
+                  setChecked((prev) => ({ ...prev, Seg: !prev.Seg }));
+                  daysFunction(0, novoValor);
+                }}
+              />
+              <Text style={styles.paragraph}>Seg</Text>
+            </View>
+
+            {/* Ter */}
+            <View style={styles.checkbox_section}>
+              <Checkbox
+                style={styles.checkbox}
+                value={isChecked.Ter}
+                onValueChange={() => {
+                  const novoValor = !isChecked.Ter;
+                  setChecked((prev) => ({ ...prev, Ter: !prev.Ter }));
+                  daysFunction(1, novoValor);
+                }}
+              />
+              <Text style={styles.paragraph}>Ter</Text>
+            </View>
+
+            {/* Qua */}
+            <View style={styles.checkbox_section}>
+              <Checkbox
+                style={styles.checkbox}
+                value={isChecked.Qua}
+                onValueChange={() => {
+                  const novoValor = !isChecked.Qua;
+                  setChecked((prev) => ({ ...prev, Qua: !prev.Qua }));
+                  daysFunction(2, novoValor);
+                }}
+              />
+              <Text style={styles.paragraph}>Qua</Text>
+            </View>
+
+            {/* Qui */}
+            <View style={styles.checkbox_section}>
+              <Checkbox
+                style={styles.checkbox}
+                value={isChecked.Qui}
+                onValueChange={() => {
+                  const novoValor = !isChecked.Qui;
+                  setChecked((prev) => ({ ...prev, Qui: !prev.Qui }));
+                  daysFunction(3, novoValor);
+                }}
+              />
+              <Text style={styles.paragraph}>Qui</Text>
+            </View>
+
+            {/* Sex */}
+            <View style={styles.checkbox_section}>
+              <Checkbox
+                style={styles.checkbox}
+                value={isChecked.Sex}
+                onValueChange={() => {
+                  const novoValor = !isChecked.Sex;
+                  setChecked((prev) => ({ ...prev, Sex: !prev.Sex }));
+                  daysFunction(4, novoValor);
+                }}
+              />
+              <Text style={styles.paragraph}>Sex</Text>
+            </View>
+
+            {/* Sab */}
+            <View style={styles.checkbox_section}>
+              <Checkbox
+                style={styles.checkbox}
+                value={isChecked.Sab}
+                onValueChange={() => {
+                  const novoValor = !isChecked.Sab;
+                  setChecked((prev) => ({ ...prev, Sab: !prev.Sab }));
+                  daysFunction(5, novoValor);
+                }}
+              />
+              <Text style={styles.paragraph}>Sab</Text>
+            </View>
+
 
             {salasDisponiveisList && (
               <View style={{ marginTop: 20 }}>
@@ -440,6 +558,16 @@ const styles = StyleSheet.create({
     width: 300,
     alignSelf: "center",
   },
-
+  checkbox_section: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  checkbox: {
+    marginRight: 8,
+  },
+  paragraph: {
+    fontSize: 16,
+  },
 
 });
